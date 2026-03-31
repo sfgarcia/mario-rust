@@ -202,6 +202,90 @@ fn all_coins_visible_and_reachable() {
     }
 }
 
+// ── Golpe de ladrillo desde abajo ────────────────────────────────────────────
+
+#[test]
+fn bumping_brick_from_below_triggers_animation() {
+    use crate::world::{World, TILE_SIZE, BUMP_FRAMES};
+    use crate::player::Player;
+    use crate::game::step_logic;
+    use crate::game::GamePhase;
+    use crate::input::InputState;
+
+    let mut world = World::new();
+    let mut player = Player::new();
+    let mut camera_x = 0.0;
+    let mut phase = GamePhase::Playing;
+
+    // Plataforma fila 11, cols 5-9. Ponemos al jugador justo debajo saltando.
+    // Cabeza del jugador debe golpear la parte inferior de row 11.
+    // y del jugador = fila 12 * TILE_SIZE = 384 (pies en fila 13)
+    // Necesitamos vy negativa y y tal que top = y+1 cae en row 11
+    // row 11 bottom = 12 * 32 = 384. Player top debe estar en ~382.
+    // y = 382 - 1 = fila 11 bottom - Player::HEIGHT ~ 384 - 32 = 352
+    // Plataforma fila 11 ocupa y=[352,384). Player top = y+1.
+    // Con vy=-15 → new_vy=-14.45, new_y = 380-14.45 = 365.55 → top=366.55 → row 11 ✓
+    player.x = 6.0 * TILE_SIZE; // col 6, dentro de la plataforma cols 5-9
+    player.y = 380.0;           // justo debajo del brick, vy lo lleva a row 11 en 1 tick
+    player.vy = -15.0;
+    player.on_ground = false;
+
+    let inp = InputState::default();
+    step_logic(&mut player, &mut world, &inp, &mut camera_x, &mut phase);
+
+    assert!(
+        !world.bump_bricks.is_empty(),
+        "bump_bricks debe tener entradas después del golpe, pero está vacío. \
+         last_bumped_brick={:?}, player.y={:.2}, player.vy={:.2}",
+        player.last_bumped_brick, player.y, player.vy
+    );
+    let b = &world.bump_bricks[0];
+    assert_eq!(b.row, 11, "el brick golpeado debe ser fila 11");
+    // update_bump_bricks se llama en el mismo tick → timer = BUMP_FRAMES - 1
+    assert_eq!(b.timer, BUMP_FRAMES - 1, "timer debe ser BUMP_FRAMES-1 tras el primer tick");
+}
+
+#[test]
+fn bumping_brick_collects_coin_above() {
+    use crate::world::{World, TILE_SIZE};
+    use crate::player::Player;
+    use crate::game::{step_logic, GamePhase};
+    use crate::input::InputState;
+
+    let mut world = World::new();
+    let mut player = Player::new();
+    let mut camera_x = 0.0;
+    let mut phase = GamePhase::Playing;
+
+    // Plataforma fila 11, cols 5-9. Monedas en fila 10, cols 5-9.
+    // Verificar que hay moneda en col 6, fila 10
+    let coin_before = world.coins.iter()
+        .find(|c| {
+            let c_col = (c.x / TILE_SIZE).floor() as usize;
+            let c_row = (c.y / TILE_SIZE).floor() as usize;
+            c_col == 6 && c_row == 10
+        })
+        .map(|c| c.collected);
+    assert_eq!(coin_before, Some(false), "debe haber moneda no recogida en col 6, fila 10");
+
+    player.x = 6.0 * TILE_SIZE;
+    player.y = 380.0; // misma posición que el test de animación
+    player.vy = -15.0;
+    player.on_ground = false;
+
+    let inp = InputState::default();
+    step_logic(&mut player, &mut world, &inp, &mut camera_x, &mut phase);
+
+    let coin_after = world.coins.iter()
+        .find(|c| {
+            let c_col = (c.x / TILE_SIZE).floor() as usize;
+            let c_row = (c.y / TILE_SIZE).floor() as usize;
+            c_col == 6 && c_row == 10
+        })
+        .map(|c| c.collected);
+    assert_eq!(coin_after, Some(true), "la moneda encima del brick golpeado debe recogerse");
+}
+
 // ── Integración con GameSim ───────────────────────────────────────────────────
 
 #[test]
