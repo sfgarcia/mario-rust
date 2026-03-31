@@ -35,6 +35,27 @@ fn pipes_have_cap_and_body() {
     assert_eq!(w.tile_at(20, 13), Tile::PipeBody);
 }
 
+#[test]
+fn pipes_have_clear_space_above() {
+    let w = world();
+    // Scan entire map for pipe caps
+    for col in 0..LEVEL_COLS {
+        for row in 0..LEVEL_ROWS {
+            if w.tile_at(col, row) == Tile::PipeCap {
+                // Verify the row above is empty (no solid tiles blocking entry)
+                if row > 0 {
+                    let tile_above = w.tile_at(col, row - 1);
+                    assert_eq!(
+                        tile_above, Tile::Empty,
+                        "pipe cap at ({}, {}) has blocking tile above: {:?}",
+                        col, row, tile_above
+                    );
+                }
+            }
+        }
+    }
+}
+
 // ── Propiedades de tiles ─────────────────────────────────────────────────────
 
 #[test]
