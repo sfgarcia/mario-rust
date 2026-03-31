@@ -147,3 +147,41 @@ fn camera_centers_on_player() {
     let result = compute_camera(2000.0);
     assert!((result - expected).abs() < f64::EPSILON, "cámara={result}, esperado={expected}");
 }
+
+// ── Validación de nivel ──────────────────────────────────────────────────────
+
+#[test]
+fn all_coins_outside_solid_tiles() {
+    use crate::world::World;
+    let world = World::new();
+    for coin in &world.coins {
+        let col = (coin.x / TILE_SIZE).floor() as usize;
+        let row = (coin.y / TILE_SIZE).floor() as usize;
+        let tile = world.tile_at(col, row);
+        assert!(
+            !World::is_solid(tile),
+            "moneda en ({}, {}) está dentro de un tile sólido: {:?}",
+            col, row, tile
+        );
+    }
+}
+
+#[test]
+fn all_coins_visible_and_reachable() {
+    use crate::world::World;
+    let world = World::new();
+    // Verificar que cada moneda no esté demasiado arriba (inalcanzable incluso saltando desde plataforma más alta)
+    let max_jump_height = 126.0; // píxeles
+    let highest_platform_y = 8.0 * TILE_SIZE; // row 8 es la plataforma más alta aproximadamente
+
+    for (idx, coin) in world.coins.iter().enumerate() {
+        // Una moneda es alcanzable si está por debajo de (plataforma_más_alta - max_jump_height)
+        // O si está dentro de una plataforma/área jugable
+        let min_reachable_y = highest_platform_y - max_jump_height;
+        assert!(
+            coin.y >= min_reachable_y,
+            "moneda #{} en y={} parece inalcanzable (min alcanzable: {})",
+            idx, coin.y, min_reachable_y
+        );
+    }
+}

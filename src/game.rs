@@ -10,7 +10,7 @@ use crate::world::{Coin, Enemy, World, CANVAS_W, LEVEL_COLS, TILE_SIZE};
 // ── Funciones puras extraídas de step() ─────────────────────────────────────
 // Permiten testear la lógica del juego sin depender de CanvasRenderingContext2d.
 
-pub(crate) fn collect_coins(player: &Player, coins: &mut Vec<Coin>) {
+pub(crate) fn collect_coins(player: &Player, coins: &mut [Coin]) {
     let px = player.x;
     let py = player.y;
     let pw = Player::WIDTH;
@@ -25,7 +25,7 @@ pub(crate) fn collect_coins(player: &Player, coins: &mut Vec<Coin>) {
     }
 }
 
-pub(crate) fn resolve_enemy_interactions(player: &mut Player, enemies: &mut Vec<Enemy>) {
+pub(crate) fn resolve_enemy_interactions(player: &mut Player, enemies: &mut [Enemy]) {
     let px = player.x;
     let py = player.y;
     let pw = Player::WIDTH;
