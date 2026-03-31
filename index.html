@@ -1,0 +1,55 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Platform Adventure</title>
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body { background: #1a1a2e; display: flex; flex-direction: column;
+           align-items: center; justify-content: center; min-height: 100vh; font-family: monospace; }
+    canvas { display: block; image-rendering: pixelated; border: 2px solid #444; }
+    #info { color: #888; margin-top: 10px; font-size: 13px; }
+  </style>
+</head>
+<body>
+  <canvas id="game-canvas" width="800" height="480"></canvas>
+  <div id="info">Flechas / WASD: mover &bull; Z / Space / &uarr;: saltar &bull; R: reiniciar</div>
+  <script>
+    // En Chrome headless, requestAnimationFrame se throttlea a 0fps.
+    // Lo reemplazamos con setTimeout que garantiza exactamente 16ms entre frames.
+    (function() {
+      const TARGET_MS = 1000 / 60; // ~16.667ms
+      let id = 0;
+      const cbs = new Map();
+      let lastFrameTime = 0;
+
+      window.requestAnimationFrame = function(cb) {
+        const handle = ++id;
+        cbs.set(handle, cb);
+        const now = performance.now();
+        const sinceLast = now - lastFrameTime;
+        const delay = Math.max(0, TARGET_MS - sinceLast);
+        setTimeout(function() {
+          if (!cbs.has(handle)) return;
+          cbs.delete(handle);
+          lastFrameTime = performance.now();
+          cb(lastFrameTime);
+        }, delay);
+        return handle;
+      };
+
+      window.cancelAnimationFrame = function(handle) {
+        cbs.delete(handle);
+      };
+    })();
+  </script>
+  <script type="module">
+    import init from './pkg/mario_wasm.js';
+    async function run() {
+      await init();
+    }
+    run().catch(console.error);
+  </script>
+</body>
+</html>
