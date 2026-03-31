@@ -109,6 +109,22 @@ fn dead_enemy_not_checked_for_collision() {
     assert!(player.alive, "enemigo muerto no debe matar al jugador");
 }
 
+// ── Múltiples monedas ────────────────────────────────────────────────────────
+
+#[test]
+fn multiple_coins_collected_in_one_step() {
+    let player = player_at(100.0, 100.0);
+    let mut coins = vec![
+        coin_at(player.x + 8.0, player.y + 8.0),
+        coin_at(player.x + 10.0, player.y + 10.0),
+        coin_at(500.0, 500.0),
+    ];
+    collect_coins(&player, &mut coins);
+    assert!(coins[0].collected, "moneda 0 debe recogerse");
+    assert!(coins[1].collected, "moneda 1 debe recogerse");
+    assert!(!coins[2].collected, "moneda lejana no debe recogerse");
+}
+
 // ── Victoria ─────────────────────────────────────────────────────────────────
 
 #[test]
@@ -184,4 +200,31 @@ fn all_coins_visible_and_reachable() {
             idx, coin.y, min_reachable_y
         );
     }
+}
+
+// ── Integración con GameSim ───────────────────────────────────────────────────
+
+#[test]
+fn win_phase_after_reaching_flag() {
+    let mut sim = crate::sim::GameSim::new();
+    // y=12*TILE_SIZE es el nivel del suelo (cuerpo en fila 12, pies en fila 13)
+    sim.player.x = sim.world.flag_x - Player::WIDTH - 10.0;
+    sim.player.y = 12.0 * TILE_SIZE;
+    let inp = crate::input::InputState { right: true, ..Default::default() };
+    sim.run(inp, 20);
+    assert!(sim.is_won(), "el jugador debe ganar al alcanzar la bandera");
+}
+
+#[test]
+fn gamesim_reset_restores_initial_state() {
+    let mut sim = crate::sim::GameSim::new();
+    let x0 = sim.player.x;
+    let inp = crate::input::InputState { right: true, ..Default::default() };
+    sim.run(inp, 60);
+    assert!(sim.player.x > x0, "el jugador debe haber avanzado");
+    assert!(sim.frame > 0, "frame debe haber avanzado");
+    sim.reset();
+    assert_eq!(sim.player.x, x0, "reset debe restaurar x inicial");
+    assert_eq!(sim.frame, 0, "reset debe restaurar frame a 0");
+    assert!(sim.is_playing(), "reset debe restaurar fase a Playing");
 }

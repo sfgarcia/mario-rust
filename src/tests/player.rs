@@ -180,6 +180,56 @@ fn player_does_not_sink_into_ground() {
     assert!(p.y <= ground_y + 2.0, "el jugador se hundió: y={}, expected<={}", p.y, ground_y);
 }
 
+// ── Colisiones de pared y techo ──────────────────────────────────────────────
+
+#[test]
+fn player_collides_with_wall_on_left() {
+    // Andar hacia la izquierda contra el lado derecho del tubo en cols 20-21.
+    let w = world();
+    let mut p = Player::new();
+    p.x = 22.0 * TILE_SIZE - Player::WIDTH; // borde izquierdo entrará en col 21
+    p.y = 12.0 * TILE_SIZE;                 // misma altura que PipeCap (fila 12)
+    p.on_ground = false;
+    p.update(&left_input(), &w);
+    assert_eq!(p.vx, 0.0, "vx debe zerificarse al chocar con pared por la izquierda");
+    assert_eq!(p.x, 22.0 * TILE_SIZE - 2.0, "x debe snappearse junto al tile");
+}
+
+#[test]
+fn player_hits_head_on_ceiling() {
+    // Saltar hacia arriba y golpear el suelo de la plataforma Brick en fila 11 (cols 5-9).
+    let w = world();
+    let mut p = Player::new();
+    p.x = 6.0 * TILE_SIZE;  // dentro de cols 5-9
+    p.y = 388.0;             // debajo del fondo de la plataforma (12*32=384), subiendo
+    p.vy = -15.0;
+    p.on_ground = false;
+    p.update(&no_input(), &w);
+    assert_eq!(p.vy, 0.0, "vy debe zerificarse al golpear el techo");
+    assert_eq!(p.y, 12.0 * TILE_SIZE, "jugador debe quedar en y=384 (fila 12)");
+}
+
+#[test]
+fn player_lands_on_floating_platform() {
+    // Caer sobre la plataforma Brick de fila 11, cols 5-9.
+    let w = world();
+    let mut p = Player::new();
+    p.x = 6.0 * TILE_SIZE;   // dentro de cols 5-9
+    p.y = 9.5 * TILE_SIZE;   // encima de la plataforma
+    p.vy = 5.0;               // cayendo
+    for _ in 0..30 {
+        if p.on_ground { break; }
+        p.update(&no_input(), &w);
+    }
+    let platform_surface = 11.0 * TILE_SIZE - Player::HEIGHT;
+    assert!(p.on_ground, "el jugador debe aterrizar en la plataforma flotante");
+    assert!(
+        (p.y - platform_surface).abs() < 1.0,
+        "jugador debe estar en la plataforma: y={:.1}, esperado={:.1}",
+        p.y, platform_surface
+    );
+}
+
 #[test]
 fn player_cannot_walk_through_pipe() {
     let w = world();

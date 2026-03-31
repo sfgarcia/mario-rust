@@ -22,7 +22,7 @@ pub fn render(ctx: &CanvasRenderingContext2d, state: &GameState) {
             let tile = state.world.tile_at(col, row);
             let sx = col as f64 * TILE_SIZE - cx;
             let sy = row as f64 * TILE_SIZE;
-            draw_tile(ctx, tile, sx, sy, col, row, state);
+            draw_tile(ctx, tile, sx, sy);
         }
     }
 
@@ -75,15 +75,7 @@ fn fill(ctx: &CanvasRenderingContext2d, color: &str, x: f64, y: f64, w: f64, h: 
 
 // ─── Tiles ───────────────────────────────────────────────────────────────────
 
-fn draw_tile(
-    ctx: &CanvasRenderingContext2d,
-    tile: Tile,
-    sx: f64,
-    sy: f64,
-    _col: usize,
-    _row: usize,
-    _state: &GameState,
-) {
+fn draw_tile(ctx: &CanvasRenderingContext2d, tile: Tile, sx: f64, sy: f64) {
     match tile {
         Tile::Empty => {}
         Tile::Ground => draw_ground(ctx, sx, sy),
@@ -270,7 +262,7 @@ fn draw_hud(ctx: &CanvasRenderingContext2d, state: &GameState) {
     ctx.fill_rect(0.0, 0.0, CANVAS_W, 28.0);
 
     ctx.set_fill_style_str("#ffffff");
-    let _ = ctx.set_font("bold 16px monospace");
+    ctx.set_font("bold 16px monospace");
 
     let coins_collected = state.world.coins.iter().filter(|c| c.collected).count();
     let total_coins     = state.world.coins.len();
@@ -305,17 +297,17 @@ fn draw_overlay(
 
     // Título
     ctx.set_fill_style_str(color);
-    let _ = ctx.set_font("bold 40px monospace");
-    let _ = ctx.set_text_align("center");
+    ctx.set_font("bold 40px monospace");
+    ctx.set_text_align("center");
     let _ = ctx.fill_text(title, CANVAS_W / 2.0, py + 70.0);
 
     // Subtítulo
     ctx.set_fill_style_str("#cccccc");
-    let _ = ctx.set_font("18px monospace");
+    ctx.set_font("18px monospace");
     let _ = ctx.fill_text(subtitle, CANVAS_W / 2.0, py + 110.0);
 
     // Resetear alineación
-    let _ = ctx.set_text_align("left");
+    ctx.set_text_align("left");
 }
 
 // ─── Nubes decorativas ───────────────────────────────────────────────────────

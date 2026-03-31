@@ -1,11 +1,14 @@
 use crate::input::InputState;
 use crate::world::{Tile, World, TILE_SIZE};
 
-const GRAVITY: f64       = 0.55;
-const MAX_FALL: f64      = 14.0;
-const MOVE_SPEED: f64    = 4.2;
-const JUMP_VEL: f64      = -11.5;
-const FRICTION: f64      = 0.75; // desaceleración horizontal al soltar teclas
+const GRAVITY: f64            = 0.55;
+const MAX_FALL: f64           = 14.0;
+const MOVE_SPEED: f64         = 4.2;
+const JUMP_VEL: f64           = -11.5;
+const FRICTION: f64           = 0.75; // desaceleración horizontal al soltar teclas
+const FRICTION_THRESHOLD: f64 = 0.1;  // snap a 0 para evitar deslizamiento infinito
+const JUMP_COOLDOWN_FRAMES: u32 = 8;  // frames de cooldown tras salto
+const DEATH_FALL_THRESHOLD: f64 = 64.0; // px extra bajo el nivel antes de morir
 
 pub struct Player {
     pub x: f64,
@@ -48,7 +51,7 @@ impl Player {
             self.facing_right = true;
         } else {
             self.vx *= FRICTION;
-            if self.vx.abs() < 0.1 { self.vx = 0.0; }
+            if self.vx.abs() < FRICTION_THRESHOLD { self.vx = 0.0; }
         }
 
         // ── Salto ────────────────────────────────────────────────────────────
@@ -56,7 +59,7 @@ impl Player {
         if input.jump_pressed && self.on_ground && self.jump_cooldown == 0 {
             self.vy = JUMP_VEL;
             self.on_ground = false;
-            self.jump_cooldown = 8;
+            self.jump_cooldown = JUMP_COOLDOWN_FRAMES;
         }
 
         // ── Gravedad ─────────────────────────────────────────────────────────
@@ -76,7 +79,7 @@ impl Player {
 
         // ── Caída al vacío ───────────────────────────────────────────────────
         let world_bottom = crate::world::LEVEL_ROWS as f64 * TILE_SIZE;
-        if self.y > world_bottom + 64.0 {
+        if self.y > world_bottom + DEATH_FALL_THRESHOLD {
             self.alive = false;
         }
     }
