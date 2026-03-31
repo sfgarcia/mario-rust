@@ -64,28 +64,6 @@ impl GameSim {
         }
     }
 
-    /// Ejecuta una secuencia de (input, frames) en orden.
-    /// Se detiene antes si la fase deja de ser Playing.
-    pub fn run_sequence(&mut self, seq: &[(InputState, u32)]) {
-        for (input, frames) in seq {
-            self.run(input.clone(), *frames);
-            if self.phase != GamePhase::Playing {
-                break;
-            }
-        }
-    }
-
-    // ── Helpers de estado ────────────────────────────────────────────────────
-
-    pub fn coins_collected(&self) -> usize {
-        self.world.coins.iter().filter(|c| c.collected).count()
-    }
-
-    pub fn enemies_alive(&self) -> usize {
-        self.world.enemies.iter().filter(|e| e.alive).count()
-    }
-
     pub fn is_playing(&self) -> bool { self.phase == GamePhase::Playing }
-    pub fn is_dead(&self)    -> bool { self.phase == GamePhase::Dead    }
     pub fn is_won(&self)     -> bool { self.phase == GamePhase::Won     }
 }
