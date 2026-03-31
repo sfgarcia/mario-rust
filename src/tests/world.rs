@@ -30,9 +30,9 @@ fn platforms_exist() {
 #[test]
 fn pipes_have_cap_and_body() {
     let w = world();
-    assert_eq!(w.tile_at(20, 12), Tile::PipeCap);
-    assert_eq!(w.tile_at(21, 12), Tile::PipeCap);
-    assert_eq!(w.tile_at(20, 13), Tile::PipeBody);
+    assert_eq!(w.tile_at(20,  9), Tile::PipeCap);
+    assert_eq!(w.tile_at(21,  9), Tile::PipeCap);
+    assert_eq!(w.tile_at(20, 10), Tile::PipeBody);
 }
 
 #[test]

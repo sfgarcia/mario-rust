@@ -2,6 +2,7 @@ pub const TILE_SIZE: f64 = 32.0;
 const ENEMY_GRAVITY: f64 = 4.0;
 pub const LEVEL_COLS: usize = 210;
 pub const LEVEL_ROWS: usize = 15;
+pub const BUMP_FRAMES: u32 = 8;
 
 /// Canvas lógico
 pub const CANVAS_W: f64 = 800.0;
@@ -50,11 +51,18 @@ impl Enemy {
     pub const HEIGHT: f64 = 28.0;
 }
 
+pub struct BumpBrick {
+    pub col: usize,
+    pub row: usize,
+    pub timer: u32,
+}
+
 pub struct World {
     pub tiles: Box<[[Tile; LEVEL_COLS]; LEVEL_ROWS]>,
     pub coins: Vec<Coin>,
     pub enemies: Vec<Enemy>,
     pub flag_x: f64,
+    pub bump_bricks: Vec<BumpBrick>,
 }
 
 impl World {
@@ -102,7 +110,7 @@ impl World {
         // ── Tubos ─────────────────────────────────────────────────────────────
         // formato: (col_izq, fila_tapa, altura_en_tiles)
         let pipes: &[(usize, usize, usize)] = &[
-            (20, 12, 3),
+            (20,  9, 6),
             (43, 11, 4),
             (60, 10, 5),
             (90, 11, 4),
@@ -174,7 +182,32 @@ impl World {
             coins,
             enemies,
             flag_x: 200.0 * TILE_SIZE,
+            bump_bricks: Vec::new(),
         }
+    }
+
+    /// Golpear un ladrillo desde abajo: inicia animación y recoge la moneda encima.
+    pub fn bump_tile(&mut self, col: usize, row: usize) {
+        if !self.bump_bricks.iter().any(|b| b.col == col && b.row == row) {
+            self.bump_bricks.push(BumpBrick { col, row, timer: BUMP_FRAMES });
+        }
+        if row == 0 { return; }
+        let coin_row = row - 1;
+        for coin in self.coins.iter_mut() {
+            if coin.collected { continue; }
+            let c = (coin.x / TILE_SIZE).floor() as usize;
+            let r = (coin.y / TILE_SIZE).floor() as usize;
+            if c == col && r == coin_row {
+                coin.collected = true;
+            }
+        }
+    }
+
+    pub fn update_bump_bricks(&mut self) {
+        for b in self.bump_bricks.iter_mut() {
+            if b.timer > 0 { b.timer -= 1; }
+        }
+        self.bump_bricks.retain(|b| b.timer > 0);
     }
 
     pub fn tile_at(&self, col: usize, row: usize) -> Tile {

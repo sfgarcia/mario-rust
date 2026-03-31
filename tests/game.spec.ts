@@ -101,6 +101,19 @@ test('el jugador puede saltar', async ({ page }) => {
   expect(before).not.toEqual(after);
 });
 
+test('el jugador puede saltar con W', async ({ page }) => {
+  await loadGame(page);
+  await startGame(page);
+  await page.waitForTimeout(200); // dejar que el jugador aterrice
+
+  const before = await page.screenshot();
+  await press(page, 'w', 150);
+  await page.waitForTimeout(200);
+  const after = await page.screenshot();
+
+  expect(before).not.toEqual(after);
+});
+
 test('el juego muestra ¡Perdiste! al morir', async ({ page }) => {
   await loadGame(page);
   await startGame(page);

@@ -20,6 +20,8 @@ pub struct Player {
     pub facing_right: bool,
     /// Frames desde último salto (para one-shot jump)
     pub jump_cooldown: u32,
+    /// Brick golpeado por la cabeza este tick (col, row)
+    pub last_bumped_brick: Option<(usize, usize)>,
 }
 
 impl Player {
@@ -36,11 +38,13 @@ impl Player {
             alive: true,
             facing_right: true,
             jump_cooldown: 0,
+            last_bumped_brick: None,
         }
     }
 
     pub fn update(&mut self, input: &InputState, world: &World) {
         if !self.alive { return; }
+        self.last_bumped_brick = None;
 
         // ── Input horizontal ─────────────────────────────────────────────────
         if input.left {
@@ -97,7 +101,7 @@ impl Player {
                 let t = world.tile_at_px(right, *py);
                 if World::is_solid(t) {
                     let col = (right / TILE_SIZE).floor() as i64;
-                    let snapped = col as f64 * TILE_SIZE - Player::WIDTH - 2.0;
+                    let snapped = col as f64 * TILE_SIZE - Player::WIDTH;
                     self.vx = 0.0;
                     return snapped;
                 }
@@ -108,7 +112,7 @@ impl Player {
                 let t = world.tile_at_px(left, *py);
                 if World::is_solid(t) {
                     let col = (left / TILE_SIZE).floor() as i64;
-                    let snapped = (col + 1) as f64 * TILE_SIZE - 2.0;
+                    let snapped = (col + 1) as f64 * TILE_SIZE;
                     self.vx = 0.0;
                     return snapped;
                 }
@@ -150,6 +154,9 @@ impl Player {
                     if matches!(t, Tile::Ground | Tile::Brick | Tile::PipeBody | Tile::PipeCap) {
                         self.y = (row + 1) as f64 * TILE_SIZE;
                         self.vy = 0.0;
+                        if t == Tile::Brick {
+                            self.last_bumped_brick = Some((col, row as usize));
+                        }
                         return;
                     }
                 }

@@ -2,7 +2,7 @@ use web_sys::CanvasRenderingContext2d;
 
 use crate::game::{GamePhase, GameState};
 use crate::player::Player;
-use crate::world::{Enemy, Tile, CANVAS_H, CANVAS_W, LEVEL_ROWS, TILE_SIZE};
+use crate::world::{Enemy, Tile, BUMP_FRAMES, CANVAS_H, CANVAS_W, LEVEL_ROWS, TILE_SIZE};
 
 pub fn render(ctx: &CanvasRenderingContext2d, state: &GameState) {
     let cx = state.camera_x;
@@ -21,7 +21,11 @@ pub fn render(ctx: &CanvasRenderingContext2d, state: &GameState) {
         for col in first_col..last_col.min(crate::world::LEVEL_COLS) {
             let tile = state.world.tile_at(col, row);
             let sx = col as f64 * TILE_SIZE - cx;
-            let sy = row as f64 * TILE_SIZE;
+            let bump_offset = state.world.bump_bricks.iter()
+                .find(|b| b.col == col && b.row == row)
+                .map(|b| if b.timer > BUMP_FRAMES / 2 { -5.0_f64 } else { 0.0_f64 })
+                .unwrap_or(0.0);
+            let sy = row as f64 * TILE_SIZE + bump_offset;
             draw_tile(ctx, tile, sx, sy);
         }
     }

@@ -159,7 +159,11 @@ pub(crate) fn step_logic(
 ) {
     if *phase != GamePhase::Playing { return; }
     player.update(input, world);
+    if let Some((col, row)) = player.last_bumped_brick.take() {
+        world.bump_tile(col, row);
+    }
     world.update_enemies();
+    world.update_bump_bricks();
     collect_coins(player, &mut world.coins);
     resolve_enemy_interactions(player, &mut world.enemies);
     if check_win(player, world.flag_x) { *phase = GamePhase::Won; }

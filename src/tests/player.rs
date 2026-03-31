@@ -192,7 +192,7 @@ fn player_collides_with_wall_on_left() {
     p.on_ground = false;
     p.update(&left_input(), &w);
     assert_eq!(p.vx, 0.0, "vx debe zerificarse al chocar con pared por la izquierda");
-    assert_eq!(p.x, 22.0 * TILE_SIZE - 2.0, "x debe snappearse junto al tile");
+    assert_eq!(p.x, 22.0 * TILE_SIZE, "x debe snappearse junto al tile");
 }
 
 #[test]
@@ -242,6 +242,42 @@ fn player_cannot_walk_through_pipe() {
     assert!(
         p.x + Player::WIDTH <= pipe_x + 4.0,
         "el jugador traspasó el tubo: jugador_right={}, tubo_left={}",
+        p.x + Player::WIDTH, pipe_x
+    );
+}
+
+#[test]
+fn player_cannot_walk_through_pipe_from_right() {
+    let w = world();
+    let mut p = Player::new();
+    let pipe_right = 22.0 * TILE_SIZE; // borde derecho del tubo (cols 20-21)
+    p.x = pipe_right + 2.0;
+    p.y = 12.0 * TILE_SIZE;
+    for _ in 0..30 { p.update(&no_input(), &w); }
+    for _ in 0..30 { p.update(&left_input(), &w); }
+    assert!(
+        p.x >= pipe_right - 4.0,
+        "el jugador traspasó el tubo desde la derecha: jugador_left={}, tubo_right={}",
+        p.x, pipe_right
+    );
+}
+
+#[test]
+fn player_on_platform_cannot_walk_into_adjacent_pipe() {
+    // Regression: platform row 10 (cols 15-19) is directly adjacent to pipe col 20.
+    // Before fix, the player could walk from the platform into the pipe because
+    // the horizontal collision checks were above the pipe cap (row 12).
+    // After fix, pipe cap is at row 9 — same height as the platform player's bottom check.
+    let w = world();
+    let mut p = Player::new();
+    let pipe_x = 20.0 * TILE_SIZE; // 640
+    p.x = 19.0 * TILE_SIZE;        // última columna de la plataforma
+    p.y = 9.0 * TILE_SIZE;         // encima de la plataforma row 10
+    for _ in 0..30 { p.update(&no_input(), &w); }   // aterrizar en plataforma
+    for _ in 0..30 { p.update(&right_input(), &w); } // caminar hacia el tubo
+    assert!(
+        p.x + Player::WIDTH <= pipe_x + 4.0,
+        "jugador en plataforma no debe entrar al tubo: derecha={}, pipe_left={}",
         p.x + Player::WIDTH, pipe_x
     );
 }
