@@ -103,7 +103,7 @@ impl World {
         // formato: (col_izq, fila_tapa, altura_en_tiles)
         let pipes: &[(usize, usize, usize)] = &[
             (20, 12, 2),
-            (40, 11, 3),
+            (43, 11, 3),
             (60, 10, 4),
             (90, 11, 3),
             (125, 10, 4),
