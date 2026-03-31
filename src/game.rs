@@ -17,9 +17,9 @@ pub(crate) fn collect_coins(player: &Player, coins: &mut Vec<Coin>) {
     let ph = Player::HEIGHT;
     for coin in coins.iter_mut() {
         if coin.collected { continue; }
-        let cx = coin.x - 8.0;
-        let cy = coin.y - 8.0;
-        if px < cx + 16.0 && px + pw > cx && py < cy + 16.0 && py + ph > cy {
+        let cx = coin.x - Coin::RADIUS;
+        let cy = coin.y - Coin::RADIUS;
+        if px < cx + Coin::RADIUS * 2.0 && px + pw > cx && py < cy + Coin::RADIUS * 2.0 && py + ph > cy {
             coin.collected = true;
         }
     }
@@ -143,40 +143,13 @@ impl GameState {
 
     fn step(&mut self) {
         let input_snapshot = self.input.borrow().clone();
-
-        // ── Física del jugador ───────────────────────────────────────────────
-        self.player.update(&input_snapshot, &self.world);
-
-        // Consumir el flanco de salto después de procesarlo
         self.input.borrow_mut().jump_pressed = false;
-
-        // ── Actualizar enemigos ──────────────────────────────────────────────
-        self.world.update_enemies();
-
-        // ── Colisiones jugador ↔ monedas ─────────────────────────────────────
-        collect_coins(&self.player, &mut self.world.coins);
-
-        // ── Colisiones jugador ↔ enemigos ─────────────────────────────────────
-        resolve_enemy_interactions(&mut self.player, &mut self.world.enemies);
-
-        // ── Victoria ──────────────────────────────────────────────────────────
-        if check_win(&self.player, self.world.flag_x) {
-            self.phase = GamePhase::Won;
-        }
-
-        // ── Muerte ────────────────────────────────────────────────────────────
-        if !self.player.alive {
-            self.phase = GamePhase::Dead;
-        }
-
-        // ── Cámara ────────────────────────────────────────────────────────────
-        self.camera_x = compute_camera(self.player.x);
+        step_logic(&mut self.player, &mut self.world, &input_snapshot, &mut self.camera_x, &mut self.phase);
     }
 }
 
 /// Ejecuta un tick de lógica sin depender de CanvasRenderingContext2d.
-/// Espejo de GameState::step(); mantener ambos sincronizados.
-#[cfg(test)]
+/// Usado tanto por GameState::step() como por GameSim::tick() en tests.
 pub(crate) fn step_logic(
     player: &mut crate::player::Player,
     world: &mut crate::world::World,

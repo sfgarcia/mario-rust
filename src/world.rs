@@ -1,4 +1,5 @@
 pub const TILE_SIZE: f64 = 32.0;
+const ENEMY_GRAVITY: f64 = 4.0;
 pub const LEVEL_COLS: usize = 210;
 pub const LEVEL_ROWS: usize = 15;
 
@@ -19,6 +20,10 @@ pub struct Coin {
     pub x: f64,
     pub y: f64,
     pub collected: bool,
+}
+
+impl Coin {
+    pub const RADIUS: f64 = 8.0;
 }
 
 pub struct Enemy {
@@ -193,11 +198,6 @@ impl World {
         matches!(tile, Tile::Ground | Tile::Brick | Tile::PipeBody | Tile::PipeCap)
     }
 
-    /// Devuelve true si el tile bloquea desde arriba (one-way platforms = Brick también)
-    pub fn is_solid_from_above(tile: Tile) -> bool {
-        Self::is_solid(tile)
-    }
-
     /// Actualiza la lógica de los enemigos.
     /// Itera por índice para poder tomar préstamos inmutables de `self.tiles`
     /// mientras mutamos cada `self.enemies[i]`.
@@ -240,7 +240,7 @@ impl World {
             let on_ground = World::is_solid(self.tile_at_px(left_x, feet_y))
                          || World::is_solid(self.tile_at_px(right_x, feet_y));
             if !on_ground {
-                self.enemies[i].y += 4.0;
+                self.enemies[i].y += ENEMY_GRAVITY;
             } else {
                 let row = ((self.enemies[i].y + Enemy::HEIGHT) / TILE_SIZE).floor() as usize;
                 self.enemies[i].y = row as f64 * TILE_SIZE - Enemy::HEIGHT;

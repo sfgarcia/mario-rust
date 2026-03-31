@@ -55,13 +55,12 @@ impl GameSim {
 
     /// Avanza `frames` ticks con el mismo InputState.
     /// Si `jump_pressed` está a true solo se usa en el primer tick.
-    pub fn run(&mut self, input: InputState, frames: u32) {
-        let mut inp = input;
+    pub fn run(&mut self, mut input: InputState, frames: u32) {
         for _ in 0..frames {
             if self.phase != GamePhase::Playing {
                 break;
             }
-            self.tick(&mut inp);
+            self.tick(&mut input);
         }
     }
 

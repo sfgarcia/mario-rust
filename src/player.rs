@@ -130,7 +130,7 @@ impl Player {
             // Solo comprobamos filas dentro del nivel; fuera solo existe el vacío
             if row >= 0 && (row as usize) < crate::world::LEVEL_ROWS {
                 for col in col_first..=col_last {
-                    if World::is_solid_from_above(world.tile_at(col, row as usize)) {
+                    if World::is_solid(world.tile_at(col, row as usize)) {
                         self.y = row as f64 * TILE_SIZE - Player::HEIGHT;
                         self.vy = 0.0;
                         self.on_ground = true;

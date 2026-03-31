@@ -48,17 +48,17 @@ fn solid_tiles() {
 
 #[test]
 fn solid_from_above_pipe_body() {
-    assert!(World::is_solid_from_above(Tile::PipeBody));
+    assert!(World::is_solid(Tile::PipeBody));
 }
 
 #[test]
 fn solid_from_above_pipe_cap() {
-    assert!(World::is_solid_from_above(Tile::PipeCap));
+    assert!(World::is_solid(Tile::PipeCap));
 }
 
 #[test]
 fn solid_from_above_empty_is_false() {
-    assert!(!World::is_solid_from_above(Tile::Empty));
+    assert!(!World::is_solid(Tile::Empty));
 }
 
 // ── Conversión pixel ↔ tile ──────────────────────────────────────────────────
