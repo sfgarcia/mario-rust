@@ -11,6 +11,7 @@ test-results/
 
 # Claude Code local config
 .claude/
+.agents/
 
 # Archivos temporales
 _tmp_index.html
