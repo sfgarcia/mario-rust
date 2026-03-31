@@ -64,7 +64,7 @@ fn register_keyboard_events(
                 match key.as_str() {
                     "ArrowLeft"  | "a" | "A" => s.left  = true,
                     "ArrowRight" | "d" | "D" => s.right = true,
-                    "ArrowUp" | " " | "z" | "Z" => {
+                    "ArrowUp" | " " | "w" | "W" | "z" | "Z" => {
                         if !s.jump {
                             s.jump_pressed = true;
                         }
@@ -97,7 +97,7 @@ fn register_keyboard_events(
                 match key.as_str() {
                     "ArrowLeft"  | "a" | "A" => s.left  = false,
                     "ArrowRight" | "d" | "D" => s.right = false,
-                    "ArrowUp" | " " | "z" | "Z" => s.jump = false,
+                    "ArrowUp" | " " | "w" | "W" | "z" | "Z" => s.jump = false,
                     "r" | "R" => s.restart = false,
                     _ => {}
                 }
