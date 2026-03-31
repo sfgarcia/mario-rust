@@ -1,0 +1,21 @@
+# Rust
+target/
+
+# WASM build output (se genera en CI)
+pkg/
+
+# Node
+node_modules/
+playwright-report/
+test-results/
+
+# Claude Code local config
+.claude/
+
+# Archivos temporales
+_tmp_index.html
+wasm_b64.txt
+butler.zip
+butler_bin/
+*.zip
+dist_itchio/
