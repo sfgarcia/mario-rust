@@ -63,10 +63,10 @@ pub fn render(ctx: &CanvasRenderingContext2d, state: &GameState) {
 
     // ── Overlay muerte / victoria ─────────────────────────────────────────────
     match state.phase {
-        GamePhase::Title   => draw_overlay(ctx, "Platform Adventure", "#2266cc", "Pulsa cualquier tecla para jugar"),
-        GamePhase::Dead    => draw_overlay(ctx, "¡Perdiste!", "#cc2222", "Pulsa R para reiniciar"),
-        GamePhase::Won     => draw_overlay(ctx, "¡Ganaste!",  "#22aa22", "Pulsa R para jugar de nuevo"),
-        GamePhase::Playing => {}
+        GamePhase::Title   => draw_overlay(ctx, "Platform Adventure", "#2266cc", "Pulsa cualquier tecla o toca la pantalla"),
+        GamePhase::Dead    => draw_overlay(ctx, "¡Perdiste!", "#cc2222", "Pulsa R o toca la pantalla para reiniciar"),
+        GamePhase::Won     => draw_overlay(ctx, "¡Ganaste!",  "#22aa22", "Pulsa R o toca la pantalla para jugar de nuevo"),
+        GamePhase::Playing => draw_touch_buttons(ctx),
     }
 }
 
@@ -274,6 +274,32 @@ fn draw_hud(ctx: &CanvasRenderingContext2d, state: &GameState) {
     let _ = ctx.fill_text("PLATFORM ADVENTURE", 10.0, 19.0);
     let score_text = format!("MONEDAS: {}/{}", coins_collected, total_coins);
     let _ = ctx.fill_text(&score_text, CANVAS_W - 200.0, 19.0);
+}
+
+// ─── Touch buttons ───────────────────────────────────────────────────────────
+
+fn draw_touch_buttons(ctx: &CanvasRenderingContext2d) {
+    ctx.set_global_alpha(0.35);
+    ctx.set_font("40px sans-serif");
+    ctx.set_text_align("center");
+    ctx.set_text_baseline("middle");
+
+    // Left
+    fill(ctx, "#ffffff", 20.0, 390.0, 70.0, 70.0);
+    ctx.set_fill_style_str("#000000");
+    let _ = ctx.fill_text("◀", 55.0, 425.0);
+
+    // Right
+    fill(ctx, "#ffffff", 100.0, 390.0, 70.0, 70.0);
+    ctx.set_fill_style_str("#000000");
+    let _ = ctx.fill_text("▶", 135.0, 425.0);
+
+    // Jump
+    fill(ctx, "#ffcc00", 710.0, 390.0, 70.0, 70.0);
+    ctx.set_fill_style_str("#000000");
+    let _ = ctx.fill_text("▲", 745.0, 425.0);
+
+    ctx.set_global_alpha(1.0);
 }
 
 // ─── Overlay ─────────────────────────────────────────────────────────────────

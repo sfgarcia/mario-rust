@@ -12,10 +12,64 @@ use std::cell::RefCell;
 use std::rc::Rc;
 
 use wasm_bindgen::prelude::*;
-use web_sys::{CanvasRenderingContext2d, HtmlCanvasElement, KeyboardEvent};
+use web_sys::{CanvasRenderingContext2d, HtmlCanvasElement, KeyboardEvent, TouchEvent};
 
 use game::GameState;
 use input::InputState;
+
+// ── Touch button regions (canvas coordinates 800×480) ────────────────────────
+const TOUCH_LEFT:  [f64; 4] = [20.0,  390.0, 70.0, 70.0]; // [x, y, w, h]
+const TOUCH_RIGHT: [f64; 4] = [100.0, 390.0, 70.0, 70.0];
+const TOUCH_JUMP:  [f64; 4] = [710.0, 390.0, 70.0, 70.0];
+
+fn zone_hit(zone: [f64; 4], tx: f64, ty: f64) -> bool {
+    tx >= zone[0] && tx < zone[0] + zone[2] && ty >= zone[1] && ty < zone[1] + zone[3]
+}
+
+fn process_touches(
+    event: &TouchEvent,
+    input: &mut InputState,
+    canvas_w: f64,
+    canvas_h: f64,
+    rect_x: f64,
+    rect_y: f64,
+    rect_w: f64,
+    rect_h: f64,
+) {
+    input.left  = false;
+    input.right = false;
+
+    let scale_x = canvas_w / rect_w;
+    let scale_y = canvas_h / rect_h;
+
+    let touches = event.touches();
+    let count = touches.length();
+
+    let mut any_touch = false;
+    let mut jump_zone = false;
+
+    for i in 0..count {
+        if let Some(t) = touches.get(i) {
+            let tx = (t.client_x() as f64 - rect_x) * scale_x;
+            let ty = (t.client_y() as f64 - rect_y) * scale_y;
+            any_touch = true;
+            if zone_hit(TOUCH_LEFT,  tx, ty) { input.left  = true; }
+            if zone_hit(TOUCH_RIGHT, tx, ty) { input.right = true; }
+            if zone_hit(TOUCH_JUMP,  tx, ty) { jump_zone   = true; }
+        }
+    }
+
+    if any_touch {
+        input.restart_pressed = true;
+    }
+
+    // Rising-edge for jump; any touch also covers Title "press any key" detection
+    let new_jump = jump_zone || any_touch;
+    if new_jump && !input.jump {
+        input.jump_pressed = true;
+    }
+    input.jump = new_jump;
+}
 
 #[wasm_bindgen(start)]
 pub fn run() -> Result<(), JsValue> {
@@ -41,11 +95,51 @@ pub fn run() -> Result<(), JsValue> {
     // ── Keyboard events ───────────────────────────────────────────────────────
     register_keyboard_events(&window, Rc::clone(&input))?;
 
+    // ── Touch events ──────────────────────────────────────────────────────────
+    register_touch_events(&canvas, Rc::clone(&input))?;
+
     // ── GameState ────────────────────────────────────────────────────────────
     let state = Rc::new(RefCell::new(GameState::new(ctx, Rc::clone(&input))));
 
     // ── Game loop ─────────────────────────────────────────────────────────────
     start_game_loop(state);
+
+    Ok(())
+}
+
+fn register_touch_events(
+    canvas: &HtmlCanvasElement,
+    input: Rc<RefCell<InputState>>,
+) -> Result<(), JsValue> {
+    use wasm_bindgen::JsCast;
+
+    macro_rules! touch_closure {
+        ($input:expr, $canvas:expr) => {{
+            let input   = Rc::clone(&$input);
+            let canvas2 = $canvas.clone();
+            Closure::<dyn FnMut(TouchEvent)>::wrap(Box::new(move |e: TouchEvent| {
+                e.prevent_default();
+                let rect = canvas2.get_bounding_client_rect();
+                process_touches(
+                    &e, &mut input.borrow_mut(),
+                    800.0, 480.0,
+                    rect.x(), rect.y(), rect.width(), rect.height(),
+                );
+            }))
+        }};
+    }
+
+    let c = touch_closure!(input, canvas);
+    canvas.add_event_listener_with_callback("touchstart", c.as_ref().unchecked_ref())?;
+    c.forget();
+
+    let c = touch_closure!(input, canvas);
+    canvas.add_event_listener_with_callback("touchend", c.as_ref().unchecked_ref())?;
+    c.forget();
+
+    let c = touch_closure!(input, canvas);
+    canvas.add_event_listener_with_callback("touchcancel", c.as_ref().unchecked_ref())?;
+    c.forget();
 
     Ok(())
 }

@@ -8,13 +8,13 @@
     * { margin: 0; padding: 0; box-sizing: border-box; }
     body { background: #1a1a2e; display: flex; flex-direction: column;
            align-items: center; justify-content: center; min-height: 100vh; font-family: monospace; }
-    canvas { display: block; image-rendering: pixelated; border: 2px solid #444; }
+    canvas { display: block; image-rendering: pixelated; border: 2px solid #444; touch-action: none; }
     #info { color: #888; margin-top: 10px; font-size: 13px; }
   </style>
 </head>
 <body>
   <canvas id="game-canvas" width="800" height="480"></canvas>
-  <div id="info">Flechas / WASD: mover &bull; Z / Space / &uarr;: saltar &bull; R: reiniciar</div>
+  <div id="info">Flechas / WASD: mover &bull; Z / Space / &uarr;: saltar &bull; R: reiniciar &bull; Móvil: botones en pantalla</div>
   <script>
     // En Chrome headless, requestAnimationFrame se throttlea a 0fps.
     // Lo reemplazamos con setTimeout que garantiza exactamente 16ms entre frames.

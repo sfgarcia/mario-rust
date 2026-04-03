@@ -24,6 +24,11 @@ features = [
   "CanvasRenderingContext2d",
   "KeyboardEvent",
   "Performance",
+  "TouchEvent",
+  "Touch",
+  "TouchList",
+  "DomRect",
+  "Event",
 ]
 
 [profile.release]
